@@ -1,0 +1,167 @@
+- hosts: all
+  name: Setup webserver
+  become: true
+  vars:
+    fullname: "Andri Junaedi"
+    node_version: "16.13.1"
+    git_repository: "https://github.com/dicodingacademy/a387-jarkom-labs.git"
+    app_dir: "$HOME/a387-jarkom-labs"
+    apache2_port: 3000
+    nginx_port: 80
+    nginx_ratelimit: "6r/m"
+  tasks:
+    - name: Setup Node
+      become: true
+      become_flags: -i
+      become_user: ubuntu
+      block:
+        - name: Install nvm
+          shell: >
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.38.0/install.sh | bash
+          args:
+            executable: /bin/bash
+            chdir: "$HOME"
+            creates: "$HOME/.nvm/nvm.sh"
+
+        - name: Setup .profile
+          lineinfile:
+            path: $HOME/.profile
+            line: source $HOME/.nvm/nvm.sh
+            create: yes
+
+        - name: Install node
+          shell: |
+            source ~/.profile
+            nvm install {{ node_version }}
+          args:
+            executable: /bin/bash
+
+    - name: Setup Node.js App
+      become: true
+      become_flags: -i
+      become_user: ubuntu
+      block:
+        - name: Clone github repository
+          git:
+            repo: "{{ git_repository }}"
+            dest: "{{ app_dir }}"
+            clone: yes
+            update: yes
+            force: yes
+
+        - name: Install dependencies
+          shell: |
+            source ~/.profile
+            npm install -g pm2
+            npm install
+          args:
+            chdir: "{{ app_dir }}"
+            executable: /bin/bash
+
+        - name: Change Hello world to {{ fullname }}
+          command: sed -i 's/Hello\ world!/{{ fullname }}/' app.js
+          args:
+            chdir: "{{ app_dir }}"
+
+        - name: Start Node.js App
+          shell: |
+            source ~/.profile
+            pm2 delete "a387-jarkom-labs"
+            pm2 start npm --name "a387-jarkom-labs" -- start
+          args:
+            chdir: "{{ app_dir }}"
+            executable: /bin/bash
+
+    - name: Setup Nginx
+      block:
+        - name: Install Nginx
+          apt:
+            name: nginx
+            state: present
+
+        - name: Backup default nginx site
+          command: cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default_backup
+
+        - name: copy nginx default.conf
+          template:
+            src: ./nginx/default.conf.j2
+            dest: /etc/nginx/sites-available/default
+            owner: root
+            group: root
+            mode: "0644"
+          notify: restart nginx
+
+    - name: Setup apache2
+      block:
+        - name: Install apache2
+          apt:
+            name: apache2
+            state: present
+
+        - name: Change default ports to 3000
+          command: sed -i 's/80/3000/' /etc/apache2/ports.conf
+          notify: restart apache2
+
+        - name: enabled proxy
+          apache2_module:
+            name: proxy
+            state: present
+          notify: restart apache2
+
+        - name: enabled proxy_http
+          apache2_module:
+            name: proxy_http
+            state: present
+          notify: restart apache2
+
+        - name: Backup default apache2 site
+          command: cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf_backup
+
+        - name: copy apache2 default.conf
+          template:
+            src: ./apache2/000-default.conf.j2
+            dest: /etc/apache2/sites-available/000-default.conf
+            owner: root
+            group: root
+            mode: "0644"
+          notify: restart apache2
+
+    - name: Fetch Apache2 & Nginx config
+      block:
+        - name: Fetch Apache2 config
+          fetch:
+            src: /etc/apache2/sites-available/000-default.conf
+            dest: ../dist/konfigurasiApache2_{{ fullname }}.txt
+            flat: yes
+
+        - name: Fetch Apache2 ports config
+          fetch:
+            src: /etc/apache2/ports.conf
+            dest: ../dist/ports_{{ fullname }}.txt
+            flat: yes
+
+        - name: Fetch Nginx config
+          fetch:
+            src: /etc/nginx/sites-available/default
+            dest: ../dist/konfigurasiNGINX_{{ fullname }}.txt
+            flat: yes
+
+        - name: Fetch app.js
+          become: true
+          become_flags: -i
+          become_user: ubuntu
+          fetch:
+            src: "{{ app_dir }}/app.js"
+            dest: ../dist/app.js
+            flat: yes
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: restart apache2
+      service:
+        name: apache2
+        state: restarted

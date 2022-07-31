@@ -1,0 +1,18 @@
+limit_req_zone $binary_remote_addr zone=one:10m rate=6r/m;
+
+server {
+	listen 80 default_server;
+	listen [::]:880 default_server;
+	server_name _;
+
+	location / {
+		proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+
+        limit_req zone=one;
+	}
+}

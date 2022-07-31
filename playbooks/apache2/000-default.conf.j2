@@ -1,0 +1,12 @@
+<VirtualHost *:{{ apache2_port }}>
+	#ServerName www.example.com
+	ServerAdmin webmaster@localhost
+
+	ProxyPreserveHost On
+
+	ProxyPass / http://127.0.0.1:8000/
+	ProxyPassReverse / http://127.0.0.1:8000/
+
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+	CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
