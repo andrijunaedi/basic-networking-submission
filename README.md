@@ -1,6 +1,6 @@
 # basic-networking-submission
 
-**Proyek Membangun Web Server (Apache2, Nginx & Node.js)** adalah submission akhir untuk kelas [Belajar Jaringan Komputer untuk Pemula - Dicoding](https://www.dicoding.com/academies/387). 
+**Proyek Membangun Web Server (Apache2, Nginx & Node.js)** adalah submission akhir untuk kelas [Belajar Jaringan Komputer untuk Pemula - Dicoding](https://www.dicoding.com/academies/387).
 
 Otomatisasi deployment dan konfigurasi menggunakan tools IaC (Infrastucture as Code):
 
@@ -9,7 +9,7 @@ Otomatisasi deployment dan konfigurasi menggunakan tools IaC (Infrastucture as C
 
 ## Requirements
 
-- [AWS CLI]()
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [Terraform v1.2.6+](https://www.terraform.io/downloads)
 - [Ansible v2.12.5+](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
@@ -17,48 +17,49 @@ Otomatisasi deployment dan konfigurasi menggunakan tools IaC (Infrastucture as C
 
 1. Clone repository
 
-    ```sh
-    git clone https://github.com/andrijunaedi/basic-networking-submission.git
-    cd basic-networking-submission
-    ```
+   ```sh
+   git clone https://github.com/andrijunaedi/basic-networking-submission.git
+   cd basic-networking-submission
+   ```
 
-2. Copy ```terraform.trfvars-example``` ke ```terraform.tfvars``` dan sesuaikan valuenya.
+2. Copy `terraform.trfvars-example` ke `terraform.tfvars` dan sesuaikan valuenya.
 
-    ```sh
-    cp terraform.trfvars-example terraform.tfvars
-    nano terraform.tfvars
-    ```
-    Note: 
+   ```sh
+   cp terraform.trfvars-example terraform.tfvars
+   nano terraform.tfvars
+   ```
 
-    - ```profile```: profile AWS Credentials
-    - ```public_key```: path public key SSH
-    - ```private_key```: path private key SSH 
+   Note:
+
+   - `profile`: profile AWS Credentials
+   - `public_key`: path public key SSH
+   - `private_key`: path private key SSH
 
 3. Init Terraform
 
-    ```sh
-    terraform init
-    ```
+   ```sh
+   terraform init
+   ```
 
 4. Terraform plan
 
-    ```sh
-    terraform plan
-    ```
+   ```sh
+   terraform plan
+   ```
 
-5. Apply terraform 
-    
-    ```sh
-    terraform apply 
+5. Apply terraform
 
-    # Terraform apply auto approve
-    terraform apply -auto-approve
-    ````
+   ```sh
+   terraform apply
+
+   # Terraform apply auto approve
+   terraform apply -auto-approve
+   ```
 
 ## Destroy semua infrastructure
 
 ```sh
-terraform destroy 
+terraform destroy
 
 # Terraform destroy auto approve
 terraform destroy -auto-approve
@@ -73,8 +74,7 @@ terraform destroy -auto-approve
 
 ### Re-run ansible playbook secara manual
 
-```ansible_command``` berikut ada pada outputs terraform:
-
+`ansible_command` berikut ada pada outputs terraform:
 
 ```sh
  ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ubuntu -i '$PUBLIC_IP,' --private-key $PRIVATE_KEY -e 'pub_key=$PUBLIC_KEY' playbooks/setup-webserver.yml
