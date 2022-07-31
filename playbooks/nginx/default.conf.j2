@@ -2,7 +2,7 @@ limit_req_zone $binary_remote_addr zone=one:10m rate={{ nginx_ratelimit }};
 
 server {
 	listen {{ nginx_port }} default_server;
-	listen [::]:8{{ nginx_port }} default_server;
+	listen [::]:{{ nginx_port }} default_server;
 	server_name _;
 
 	location / {
